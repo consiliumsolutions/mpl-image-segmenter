@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from matplotlib import __version__ as mpl_version
 from matplotlib import get_backend
+from matplotlib.backend_bases import MouseButton
 from matplotlib.colors import TABLEAU_COLORS, XKCD_COLORS, to_rgba_array
 from matplotlib.path import Path
 from matplotlib.pyplot import ioff, subplots
@@ -156,6 +157,8 @@ class ImageSegmenter:
         self.current_class = 1
         self._erasing = False
         self._paths: dict[str, list[Path]] = {"adding": [], "erasing": []}
+        self.fig.canvas.mpl_connect("button_press_event",self.onclick_select)
+
 
     def _refresh_overlay_values(self) -> None:
         # leave the actual updating of image to other code
@@ -167,6 +170,17 @@ class ImageSegmenter:
                 self._overlay[idx] = [0, 0, 0, 0]
             else:
                 self._overlay[idx] = self.mask_colors[i - 1]
+
+    def toggle_erase(self) -> None:
+        if self._erasing:
+            self._erasing = False
+        else:
+            self._erasing = True
+
+
+    def onclick_select(self, event):
+        if event.button is MouseButton.RIGHT:
+            self.toggle_erase()
 
     @staticmethod
     def _pad_to_stack(arr: np.ndarray, name: str, color_image: bool) -> np.ndarray:
@@ -287,3 +301,5 @@ class ImageSegmenter:
 
     def _ipython_display_(self) -> None:
         display(self.fig.canvas)  # type: ignore # noqa: F821
+
+
